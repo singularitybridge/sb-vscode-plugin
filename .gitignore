@@ -8,7 +8,6 @@ dist/
 *.vsix
 
 # IDE specific files
-.vscode/
 .idea/
 *.swp
 *.swo
