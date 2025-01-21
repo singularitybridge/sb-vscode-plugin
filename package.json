@@ -1,0 +1,41 @@
+{
+  "name": "list-open-files",
+  "displayName": "List Open Files",
+  "description": "A small extension to list all open files (with their contents) into a single text file.",
+  "version": "0.0.1",
+  "publisher": "singularitybridge",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/singularitybridge/list-open-files"
+  },
+  "engines": {
+    "vscode": "^1.50.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onCommand:list-open-files.listAllOpenFiles"
+  ],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "list-open-files.listAllOpenFiles",
+        "title": "List All Open Files"
+      }
+    ]
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -p ./ --watch",
+    "test": "echo \"No tests specified.\""
+  },
+  "devDependencies": {
+    "@types/node": "^14.14.0",
+    "@types/vscode": "^1.50.0",
+    "typescript": "^4.0.0",
+    "vscode-test": "^1.3.0"
+  }
+}
