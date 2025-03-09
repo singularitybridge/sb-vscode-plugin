@@ -5,6 +5,7 @@ A VS Code extension that lists all currently open files and their contents into 
 ## Features
 
 - Lists all open files in the editor
+- Lists all Git modified files (staged or unstaged)
 - Shows the relative path of each file
 - Displays the content of each file
 - Excludes untitled (unsaved) files
@@ -13,7 +14,9 @@ A VS Code extension that lists all currently open files and their contents into 
 ## Usage
 
 1. Open the Command Palette (`Cmd+Shift+P` on macOS or `Ctrl+Shift+P` on Windows/Linux)
-2. Type "List All Open Files" and select the command
+2. Type "List All Open Files" and select the command to list currently open files
+   OR
+   Type "List All Modified Files" and select the command to list Git modified files
 3. A new document will open showing all files in the format:
 ```
 relative/path/to/file1.ext:
@@ -36,6 +39,10 @@ This extension does not contribute any settings.
 None at this time.
 
 ## Release Notes
+
+### 0.0.2
+
+- Added functionality to list Git modified files (staged or unstaged)
 
 ### 0.0.1
 

@@ -1,5 +1,30 @@
 import * as vscode from 'vscode';
 
+// Git API types
+interface GitExtension {
+  getAPI(version: number): GitAPI;
+}
+
+interface GitAPI {
+  repositories: Repository[];
+}
+
+interface Repository {
+  state: RepositoryState;
+}
+
+interface RepositoryState {
+  indexChanges: GitChange[];
+  workingTreeChanges: GitChange[];
+  untrackedChanges: GitChange[];
+}
+
+interface GitChange {
+  uri: vscode.Uri;
+  originalUri?: vscode.Uri;
+  renameUri?: vscode.Uri;
+}
+
 // Types
 type DocumentInfo = {
   path: string;
@@ -65,13 +90,80 @@ const listOpenFiles = async (): Promise<void> => {
   }
 };
 
+const listModifiedFiles = async (): Promise<void> => {
+  try {
+    // Get Git extension
+    const gitExtension = vscode.extensions.getExtension('vscode.git')?.exports;
+    if (!gitExtension) {
+      vscode.window.showErrorMessage('Git extension not found or not activated.');
+      return;
+    }
+
+    // Get Git API and repository
+    const git = (gitExtension as GitExtension).getAPI(1);
+    const repositories = git.repositories;
+    
+    if (repositories.length === 0) {
+      vscode.window.showInformationMessage('No Git repositories found in workspace.');
+      return;
+    }
+
+    // Get modified files from all repositories
+    let outputContent = '';
+    for (const repo of repositories) {
+      const state = repo.state;
+      
+      // Combine all changes (staged, working tree, etc.)
+      const changes = [
+        ...state.indexChanges,
+        ...state.workingTreeChanges,
+        ...state.untrackedChanges
+      ];
+      
+      if (changes.length === 0) {
+        continue;
+      }
+      
+      // Process each changed file
+      for (const change of changes) {
+        try {
+          const uri = change.uri;
+          const doc = await vscode.workspace.openTextDocument(uri);
+          
+          const info = getDocumentInfo(doc);
+          outputContent += formatDocumentInfo(info);
+        } catch (err) {
+          // Skip files that can't be opened
+          continue;
+        }
+      }
+    }
+    
+    if (outputContent.length === 0) {
+      vscode.window.showInformationMessage('No modified files found.');
+      return;
+    }
+
+    await createOutputDocument(outputContent);
+  } catch (error) {
+    vscode.window.showErrorMessage(`Failed to list modified files: ${error instanceof Error ? error.message : 'Unknown error'}`);
+  }
+};
+
 export const activate = (context: vscode.ExtensionContext): void => {
-  const disposable = vscode.commands.registerCommand(
+  // Register the original command
+  const listOpenFilesCommand = vscode.commands.registerCommand(
     'list-open-files.listAllOpenFiles',
     listOpenFiles
   );
+  
+  // Register the new command for modified files
+  const listModifiedFilesCommand = vscode.commands.registerCommand(
+    'list-open-files.listModifiedFiles',
+    listModifiedFiles
+  );
 
-  context.subscriptions.push(disposable);
+  context.subscriptions.push(listOpenFilesCommand, listModifiedFilesCommand);
 };
 
 export const deactivate = (): void => {
