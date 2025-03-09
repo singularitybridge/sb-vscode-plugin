@@ -90,6 +90,10 @@ const listOpenFiles = async (): Promise<void> => {
   }
 };
 
+interface FilePickItem extends vscode.QuickPickItem {
+  uri: vscode.Uri;
+}
+
 const listModifiedFiles = async (): Promise<void> => {
   try {
     // Get Git extension
@@ -108,8 +112,9 @@ const listModifiedFiles = async (): Promise<void> => {
       return;
     }
 
-    // Get modified files from all repositories
-    let outputContent = '';
+    // Collect all modified files from all repositories
+    const modifiedFiles: FilePickItem[] = [];
+    
     for (const repo of repositories) {
       const state = repo.state;
       
@@ -124,26 +129,56 @@ const listModifiedFiles = async (): Promise<void> => {
         continue;
       }
       
-      // Process each changed file
+      // Add each changed file to the list
       for (const change of changes) {
         try {
           const uri = change.uri;
-          const doc = await vscode.workspace.openTextDocument(uri);
+          const relativePath = vscode.workspace.asRelativePath(uri);
           
-          const info = getDocumentInfo(doc);
-          outputContent += formatDocumentInfo(info);
+          if (!shouldSkipFile(relativePath)) {
+            modifiedFiles.push({
+              label: relativePath,
+              picked: true, // Selected by default
+              uri: uri
+            });
+          }
         } catch (err) {
-          // Skip files that can't be opened
+          // Skip files that can't be processed
           continue;
         }
       }
     }
     
-    if (outputContent.length === 0) {
+    if (modifiedFiles.length === 0) {
       vscode.window.showInformationMessage('No modified files found.');
       return;
     }
 
+    // Show QuickPick UI with checkboxes
+    const selectedFiles = await vscode.window.showQuickPick(modifiedFiles, {
+      canPickMany: true,
+      placeHolder: 'Select files to include in the output',
+      title: 'Modified Files'
+    });
+    
+    // User cancelled the selection
+    if (!selectedFiles || selectedFiles.length === 0) {
+      return;
+    }
+    
+    // Process selected files
+    let outputContent = '';
+    for (const file of selectedFiles) {
+      try {
+        const doc = await vscode.workspace.openTextDocument(file.uri);
+        const info = getDocumentInfo(doc);
+        outputContent += formatDocumentInfo(info);
+      } catch (err) {
+        // Skip files that can't be opened
+        continue;
+      }
+    }
+    
     await createOutputDocument(outputContent);
   } catch (error) {
     vscode.window.showErrorMessage(`Failed to list modified files: ${error instanceof Error ? error.message : 'Unknown error'}`);
