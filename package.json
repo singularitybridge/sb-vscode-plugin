@@ -2,7 +2,7 @@
   "name": "list-open-files",
   "displayName": "List Open Files",
   "description": "A small extension to list all open files (with their contents) into a single text file.",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "publisher": "singularitybridge",
   "license": "MIT",
   "repository": {
@@ -17,7 +17,8 @@
   ],
   "activationEvents": [
     "onCommand:list-open-files.listAllOpenFiles",
-    "onCommand:list-open-files.listModifiedFiles"
+    "onCommand:list-open-files.listModifiedFiles",
+    "onCommand:list-open-files.listBranchComparisonFiles"
   ],
   "main": "./out/extension.js",
   "contributes": {
@@ -29,6 +30,10 @@
       {
         "command": "list-open-files.listModifiedFiles",
         "title": "List All Modified Files"
+      },
+      {
+        "command": "list-open-files.listBranchComparisonFiles",
+        "title": "Compare Files with Main/Master Branch"
       }
     ]
   },
